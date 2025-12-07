@@ -3,461 +3,508 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Control Orbital - Sol, Tierra y Luna</title>
-    <link rel="stylesheet" href="css/style.css"> 
+    <title>Sistema Solar Pro - Educación Interactiva</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
 
     <style>
-        /* --- ESTILO NASA / MISSION CONTROL --- */
+        /* --- APPLE DESIGN SYSTEM VARIABLES --- */
         :root {
-            --nasa-blue: #0B3D91;
-            --space-black: #050505;
-            --hud-cyan: #00f0ff;
-            --hud-glass: rgba(11, 61, 145, 0.15);
-            --text-main: #e0e0e0;
-            --text-highlight: #ffffff;
-            --border-color: rgba(0, 240, 255, 0.3);
+            --bg-body: #f5f5f7; /* Gris Apple clásico */
+            --bg-card: #ffffff;
+            --accent-blue: #0071e3;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --border-radius-lg: 24px;
+            --border-radius-md: 18px;
+            --border-radius-pill: 99px;
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.04);
+            --shadow-md: 0 10px 30px rgba(0,0,0,0.08);
         }
 
         body {
-            background-color: var(--space-black);
-            background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #000000 100%);
-            color: var(--text-main);
-            font-family: 'Rajdhani', sans-serif; /* Fuente técnica para lectura */
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
             margin: 0;
-            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        h1, h2, h3, h4 {
-            font-family: 'Orbitron', sans-serif; /* Fuente futurista para títulos */
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--text-highlight);
-            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-        }
-
-        /* HEADER */
+        /* --- NAVBAR STICKY GLASS --- */
         header {
-            background: rgba(0,0,0,0.8);
-            border-bottom: 2px solid var(--nasa-blue);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
             padding: 15px 0;
-            position: relative;
-        }
-        
-        header::before {
-            content: "SYSTEM: ONLINE";
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            font-family: 'Orbitron', monospace;
-            font-size: 0.7rem;
-            color: #0f0;
         }
 
-        header h1 {
-            font-size: 1.8rem;
-            margin: 0;
-        }
-
-        header p {
-            font-size: 0.9rem;
-            color: var(--hud-cyan);
-            opacity: 0.8;
-            letter-spacing: 1px;
-        }
-
-        /* LAYOUT PRINCIPAL */
-        .container {
-            max-width: 1400px;
+        .header-content {
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            background: #e8e8ed;
+            padding: 4px 10px;
+            border-radius: var(--border-radius-pill);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* --- MAIN LAYOUT --- */
+        main {
+            max-width: 1200px;
+            margin: 40px auto;
             padding: 0 20px;
         }
 
-        .content-wrapper {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            height: calc(100vh - 150px); /* Altura completa menos header */
-            min-height: 600px;
+        /* --- HERO SECTION (3D VIEWER) --- */
+        .hero-section {
+            margin-bottom: 30px;
         }
 
-        /* SIDEBAR (Panel de Control) */
-        .sidebar {
-            width: 350px;
-            background: var(--hud-glass);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-            overflow-y: auto;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.05);
-        }
-
-        /* MODELO 3D (Visor) */
         .model-container {
-            flex-grow: 1;
-            background: black;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            position: relative;
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
-        }
-
-        /* Decoración de esquinas del visor 3D para efecto HUD */
-        .model-container::after {
-            content: "";
-            position: absolute;
-            top: 10px; left: 10px; right: 10px; bottom: 10px;
-            border: 1px solid transparent;
-            /* Esquinas estilo HUD */
-            background: 
-                linear-gradient(to right, var(--hud-cyan) 2px, transparent 2px) 0 0,
-                linear-gradient(to bottom, var(--hud-cyan) 2px, transparent 2px) 0 0,
-                linear-gradient(to left, var(--hud-cyan) 2px, transparent 2px) 100% 0,
-                linear-gradient(to bottom, var(--hud-cyan) 2px, transparent 2px) 100% 0,
-                linear-gradient(to left, var(--hud-cyan) 2px, transparent 2px) 100% 100%,
-                linear-gradient(to top, var(--hud-cyan) 2px, transparent 2px) 100% 100%,
-                linear-gradient(to right, var(--hud-cyan) 2px, transparent 2px) 0 100%,
-                linear-gradient(to top, var(--hud-cyan) 2px, transparent 2px) 0 100%;
-            background-repeat: no-repeat;
-            background-size: 20px 20px;
-            pointer-events: none;
-            opacity: 0.6;
-        }
-
-        /* BOTONES */
-        button {
-            background: rgba(0,0,0,0.6);
-            border: 1px solid var(--hud-cyan);
-            color: var(--hud-cyan);
-            padding: 8px 15px;
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 700;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 5px;
             width: 100%;
-            border-radius: 4px;
+            height: 600px;
+            background: #000;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- BENTO GRID CONTROLS --- */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+
+        .control-card {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-card h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin: 0 0 5px 0;
+        }
+
+        /* --- BUTTONS & INPUTS --- */
+        button {
+            background: #f5f5f7;
+            border: none;
+            padding: 12px 16px;
+            border-radius: var(--border-radius-md);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
         }
 
         button:hover {
-            background: var(--hud-cyan);
-            color: black;
-            box-shadow: 0 0 15px var(--hud-cyan);
+            background: #e8e8ed;
         }
 
-        button.active {
-            background: var(--hud-cyan);
-            color: black;
-            box-shadow: 0 0 10px var(--hud-cyan); 
+        /* Estado Activo (Apple Blue) */
+        button.active, button:active {
+            background: var(--accent-blue);
+            color: white;
         }
 
-        /* Agrupar botones pequeños */
-        .control-group {
-            margin-bottom: 25px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 15px;
+        /* Grid de botones pequeños */
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
 
-        .control-group h3 {
-            font-size: 1rem;
-            color: var(--hud-cyan);
-            margin-top: 0;
-            border-left: 3px solid var(--hud-cyan);
-            padding-left: 10px;
+        /* Sliders estilo iOS */
+        .slider-group {
+            margin-bottom: 10px;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 8px;
         }
 
-        /* SLIDERS (Inputs) */
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
-            height: 4px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 2px;
+            height: 6px;
+            background: #e8e8ed;
+            border-radius: 5px;
             outline: none;
-            margin: 10px 0;
         }
-        
+
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 15px;
-            height: 15px;
-            background: var(--hud-cyan);
+            width: 22px;
+            height: 22px;
+            background: #ffffff;
+            border: 0.5px solid rgba(0,0,0,0.04);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 10px var(--hud-cyan);
+            transition: transform 0.1s;
         }
 
-        /* CHECKBOXES */
-        .checkbox-container {
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        /* Checkboxes modernos */
+        .toggle-row {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            margin: 5px 0;
-            font-size: 1rem;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f7;
         }
         
-        .checkbox-container input {
-            margin-right: 10px;
-            accent-color: var(--hud-cyan);
+        .toggle-row:last-child { border-bottom: none; }
+
+        /* --- INFO PANEL --- */
+        .info-panel {
+            grid-column: span 3;
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
         }
 
-        /* PESTAÑAS DE LECCIONES */
+        .info-panel p {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* --- LESSONS SECTION --- */
         .lessons-section {
-            margin-top: 30px;
-            background: rgba(0,0,0,0.5);
-            border-top: 1px solid var(--border-color);
-            padding: 20px;
+            margin-top: 80px;
         }
 
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: -0.02em;
+        }
+
+        /* Tabs como Segmented Control */
         .lesson-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            background: #e8e8ed;
+            padding: 4px;
+            border-radius: var(--border-radius-pill);
+            display: inline-flex;
+            margin: 0 auto 50px auto;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .lesson-tab {
-            width: auto;
-            border-bottom: 3px solid transparent;
-            border-radius: 0;
+            background: transparent;
+            border-radius: var(--border-radius-pill);
+            padding: 10px 24px;
+            font-size: 0.9rem;
         }
 
         .lesson-tab.active {
-            border-bottom: 3px solid var(--hud-cyan);
+            background: white;
+            color: black;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* CONTENIDO DE LECCIONES */
-        .lesson-grid, .lesson-flex {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+        .lesson-tab:hover:not(.active) {
+            background: rgba(255,255,255,0.5);
         }
 
-        .lesson-item, .lesson-col {
-            background: rgba(255,255,255,0.05);
-            padding: 15px;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 4px;
-        }
-
-        .lesson-content img {
-            max-width: 100%;
-            border: 1px solid var(--hud-cyan);
-            margin-bottom: 10px;
-            filter: contrast(1.1) saturate(1.1); /* Efecto levemente procesado */
-        }
-
-        /* FOOTER */
-        footer {
-            text-align: center;
-            padding: 20px;
-            border-top: 1px solid var(--border-color);
-            margin-top: 40px;
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.5);
+        /* Contenido de lecciones */
+        .lesson-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
         }
         
-        /* Ajuste Responsive */
+        .lesson-content.active { display: block; }
+
+        .lesson-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .lesson-item {
+            text-align: left;
+        }
+
+        .lesson-item img {
+            width: 100%;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.3s ease;
+        }
+
+        .lesson-item img:hover {
+            transform: scale(1.02);
+        }
+
+        .lesson-item h4 {
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+        }
+
+        .lesson-item ul, .lesson-item p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background: white;
+            padding: 50px 0;
+            text-align: center;
+            margin-top: 80px;
+            border-top: 1px solid #e8e8ed;
+        }
+
+        footer p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
         @media (max-width: 900px) {
-            .content-wrapper {
-                flex-direction: column;
-                height: auto;
-            }
-            .sidebar {
-                width: 100%;
-                height: auto;
-                max-height: 400px;
-            }
-            .model-container {
-                height: 400px;
+            .controls-grid { grid-template-columns: 1fr; }
+            .info-panel { grid-column: span 1; }
+            .lesson-tabs { 
+                flex-direction: column; 
+                width: 100%; 
+                border-radius: var(--border-radius-lg);
             }
         }
     </style>
 </head>
 <body>
+
     <header>
-        <div class="container">
-            <h1>Relaciones Orbitales</h1>
-            <p>Módulo de enseñanza interactiva 3D :: Nivel 3</p>
+        <div class="header-content">
+            <h1>Sistema Solar <span style="color: var(--text-secondary); font-weight:400;">Interactive</span></h1>
+            <span class="badge">Ciencias 3º Grado</span>
         </div>
     </header>
     
     <main>
-        <div class="container">
-            <div class="content-wrapper">
-                <div class="sidebar">
-                    <div class="control-panel">
-                        <h2>Panel de Comandos</h2>
-                        <div class="control-group">
-                            <h3>Telemetría Visual</h3>
-                            <button id="sun-view" class="view-btn active" aria-label="Seleccionar vista solar">CAM 1: Sol</button>
-                            <button id="earth-view" class="view-btn" aria-label="Seleccionar vista de la Tierra">CAM 2: Tierra</button>
-                            <button id="moon-view" class="view-btn" aria-label="Seleccionar vista de la Luna">CAM 3: Luna</button>
-                            <button id="space-view" class="view-btn" aria-label="Seleccionar vista del espacio">CAM 4: Orbital</button>
-                        </div>
-                        
-                        <div class="control-group">
-                            <h3>Control de Física</h3>
-                            <div class="slider-container">
-                                <label for="speed-control">Velocidad Simulación:</label>
-                                <input type="range" id="speed-control" min="0.1" max="5" step="0.1" value="1">
-                                <span id="speed-value" style="color: var(--hud-cyan)">1.0x</span>
-                            </div>
-
-                            <div class="slider-container">
-                                <label for="tilt-control">Inclinación Axial (°):</label>
-                                <input type="range" id="tilt-control" min="0" max="45" step="1" value="23">
-                                <span id="tilt-value" style="color: var(--hud-cyan)">23°</span>
-                            </div>
-                            <div class="checkbox-container">
-                                <input type="checkbox" id="show-orbit" checked>
-                                <label for="show-orbit">Mostrar Trayectorias</label>
-                            </div>
-                            <div class="checkbox-container">
-                                <input type="checkbox" id="show-names" checked>
-                                <label for="show-names">Mostrar Etiquetas</label>
-                            </div>
-                            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                                <button id="play-pause" class="control-btn">❚❚ PAUSA</button>
-                                <button id="reset" class="control-btn">↻ REINICIO</button>
-                            </div>
-                        </div>
-                        
-                        <div class="control-group">
-                            <h3>Simulación de Eventos</h3>
-                            <button id="show-day-night" class="phenomenon-btn">Ciclo Día/Noche</button>
-                            <button id="show-seasons" class="phenomenon-btn">Ciclo Estacional</button>
-                            <button id="show-moon-phases" class="phenomenon-btn">Fases Lunares</button>
-                        </div>
-                    </div>
-                    
-                    <div class="info-panel" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                        <h3 style="font-size: 1rem; color: var(--hud-cyan);">Registro de Datos</h3>
-                        <div id="info-content" style="font-size: 0.9rem; line-height: 1.4;">
-                            <p>Sistemas nominales. Seleccione parámetros para iniciar simulación.</p>
-                        </div>
-                    </div>
+        <section class="hero-section">
+            <div class="model-container" id="solar-system" role="img" aria-label="Simulación 3D del sistema solar">
                 </div>
+        </section>
+
+        <div class="controls-grid">
+            
+            <div class="control-card">
+                <h3>Vistas de Cámara</h3>
+                <div class="button-grid">
+                    <button id="sun-view" class="view-btn active">Sol</button>
+                    <button id="earth-view" class="view-btn">Tierra</button>
+                    <button id="moon-view" class="view-btn">Luna</button>
+                    <button id="space-view" class="view-btn">Espacio</button>
+                </div>
+            </div>
+
+            <div class="control-card">
+                <h3>Ajustes de Física</h3>
                 
-                <div class="model-container" id="solar-system" role="img" aria-label="Simulación 3D del sistema solar">
+                <div class="slider-group">
+                    <div style="display:flex; justify-content:space-between;">
+                        <label>Velocidad Orbital</label>
+                        <span id="speed-value" style="color:var(--accent-blue); font-weight:600;">1x</span>
                     </div>
+                    <input type="range" id="speed-control" min="0.1" max="5" step="0.1" value="1">
+                </div>
+
+                <div class="slider-group">
+                    <div style="display:flex; justify-content:space-between;">
+                        <label>Inclinación Eje</label>
+                        <span id="tilt-value" style="color:var(--accent-blue); font-weight:600;">23°</span>
+                    </div>
+                    <input type="range" id="tilt-control" min="0" max="45" step="1" value="23">
+                </div>
+
+                <div class="toggle-row">
+                    <label for="show-orbit" style="margin:0;">Mostrar Órbitas</label>
+                    <input type="checkbox" id="show-orbit" checked>
+                </div>
+                <div class="toggle-row">
+                    <label for="show-names" style="margin:0;">Etiquetas</label>
+                    <input type="checkbox" id="show-names" checked>
+                </div>
+            </div>
+
+            <div class="control-card">
+                <h3>Simulaciones</h3>
+                <button id="show-day-night" class="phenomenon-btn">Ciclo Día / Noche</button>
+                <button id="show-seasons" class="phenomenon-btn">Estaciones del Año</button>
+                <button id="show-moon-phases" class="phenomenon-btn">Fases Lunares</button>
+                <div style="margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button id="play-pause" style="background: var(--text-primary); color: white;">Pausar</button>
+                    <button id="reset">Reiniciar</button>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div id="info-content">
+                    <p>Bienvenido. Selecciona una función en el panel de control para comenzar a explorar la dinámica orbital.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="lessons-section">
+            <h2 class="section-title">Aprende sobre el Cosmos.</h2>
+            
+            <div class="lesson-tabs">
+                <button class="lesson-tab active" data-tab="lesson1">Conceptos Básicos</button>
+                <button class="lesson-tab" data-tab="lesson2">La Tierra</button>
+                <button class="lesson-tab" data-tab="lesson3">La Luna</button>
+                <button class="lesson-tab" data-tab="lesson4">Fases</button>
             </div>
             
-            <div class="lessons-section">
-                <h2>Base de Conocimientos</h2>
-                <div class="lesson-tabs">
-                    <button class="lesson-tab active" data-tab="lesson1">Datos Generales</button>
-                    <button class="lesson-tab" data-tab="lesson2">Dinámica Terrestre</button>
-                    <button class="lesson-tab" data-tab="lesson3">Dinámica Lunar</button>
-                    <button class="lesson-tab" data-tab="lesson4">Fases</button>
-                </div>
-                
-                <div class="lesson-content active" id="lesson1">
-                    <h3>Análisis: Sol, Tierra y Luna</h3>
-                    <div class="lesson-grid">
-                        <div class="lesson-item">
-                            <h4>SOL [Estrella Tipo G]</h4>
-                            <img src="images/sun.jpg" alt="Sol">
-                            <ul>
-                                <li>Fuente de energía primaria del sistema.</li>
-                                <li>Centro gravitacional del sistema local.</li>
-                                <li>Diámetro: ~109x comparado con la Tierra.</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="lesson-item">
-                            <h4>TIERRA [Planeta Rocoso]</h4>
-                            <img src="images/earth.jpg" alt="Tierra">
-                            <ul>
-                                <li>Posee atmósfera, agua líquida y vida.</li>
-                                <li>Diámetro ecuatorial: 12,742 km.</li>
-                                <li>Periodo orbital: 365.25 días.</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="lesson-item">
-                            <h4>LUNA [Satélite Natural]</h4>
-                            <img src="images/moon.jpg" alt="Luna">
-                            <ul>
-                                <li>Único satélite natural de la Tierra.</li>
-                                <li>Rotación sincrónica (misma cara visible).</li>
-                                <li>Superficie impactada por cráteres.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="lesson-content" id="lesson2">
-                    <h3>Movimiento de la Tierra</h3>
-                    <div class="lesson-flex">
-                        <div class="lesson-col">
-                            <h4>Rotación Axial</h4>
-                            <img src="images/earth-rotation.jpg" alt="Rotación de la Tierra">
-                            <p>Giro sobre su propio eje (Oeste a Este). Duración: ~24 horas. Efecto visible: Ciclo Día/Noche.</p>
-                        </div>
-                        <div class="lesson-col">
-                            <h4>Traslación Orbital</h4>
-                            <img src="images/earth-revolution.jpg" alt="Traslación de la Tierra">
-                            <p>Órbita elíptica alrededor del Sol. Duración: 365 días. Efecto visible: Estaciones del año (combinado con inclinación axial).</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="lesson-content" id="lesson3">
-                    <h3>Movimiento de la Luna</h3>
-                    <div class="lesson-flex">
-                        <div class="lesson-col">
-                            <h4>Rotación Lunar</h4>
-                            <img src="images/moon-rotation.jpg" alt="Rotación de la Luna">
-                            <p>Duración: 27.3 días. Coincide exactamente con su traslación (Acoplamiento de marea).</p>
-                        </div>
-                        <div class="lesson-col">
-                            <h4>Traslación Lunar</h4>
-                            <img src="images/moon-revolution.jpg" alt="Traslación de la Luna">
-                            <p>Órbita alrededor de la Tierra. Ciclo completo de fases: 29.5 días.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="lesson-content" id="lesson4">
-                    <h3>Análisis de Fases Lunares</h3>
-                    <img src="images/moon-phases.jpg" alt="Cambio de fases de la Luna" class="full-width-img" style="width: 100%;">
-                    <div class="lesson-text">
-                        <p>Variación de la superficie iluminada visible desde la Tierra.</p>
+            <div class="lesson-content active" id="lesson1">
+                <div class="lesson-grid">
+                    <div class="lesson-item">
+                        <img src="images/sun.jpg" alt="Sol">
+                        <h4>El Sol</h4>
                         <ul>
-                            <li><strong>Luna Nueva:</strong> Conjunción (Luna entre Sol y Tierra).</li>
-                            <li><strong>Luna Llena:</strong> Oposición (Tierra entre Sol y Luna).</li>
-                            <li><strong>Cuartos:</strong> Cuadratura (Ángulo de 90°).</li>
+                            <li>Estrella central que emite luz y calor.</li>
+                            <li>Es 109 veces más grande que la Tierra.</li>
+                            <li>Fuente principal de energía.</li>
+                        </ul>
+                    </div>
+                    <div class="lesson-item">
+                        <img src="images/earth.jpg" alt="Tierra">
+                        <h4>La Tierra</h4>
+                        <ul>
+                            <li>Planeta con océanos y atmósfera.</li>
+                            <li>Hogar de la humanidad.</li>
+                            <li>Diámetro: 12,742 km.</li>
+                        </ul>
+                    </div>
+                    <div class="lesson-item">
+                        <img src="images/moon.jpg" alt="Luna">
+                        <h4>La Luna</h4>
+                        <ul>
+                            <li>Único satélite natural.</li>
+                            <li>No tiene atmósfera propia.</li>
+                            <li>Superficie cubierta de cráteres.</li>
                         </ul>
                     </div>
                 </div>
             </div>
-
-            <div class="resources-section" style="margin-top: 30px; border: 1px dashed var(--hud-cyan); padding: 20px;">
-                <h2 style="font-size: 1.2rem;">Enlaces de Datos Externos</h2>
-                <ul>
-                    <li><a href="https://spaceplace.nasa.gov/" target="_blank" style="color: var(--hud-cyan);">NASA Space Place</a></li>
-                    <li><a href="https://solarsystem.nasa.gov/planets/overview/" target="_blank" style="color: var(--hud-cyan);">NASA – Exploración del Sistema Solar</a></li>
-                </ul>
+            
+            <div class="lesson-content" id="lesson2">
+                <div class="lesson-grid">
+                    <div class="lesson-item">
+                        <img src="images/earth-rotation.jpg" alt="Rotación">
+                        <h4>Rotación</h4>
+                        <p>Giro sobre su propio eje cada 24 horas. Esto crea el día y la noche.</p>
+                    </div>
+                    <div class="lesson-item">
+                        <img src="images/earth-revolution.jpg" alt="Traslación">
+                        <h4>Traslación</h4>
+                        <p>Viaje alrededor del Sol que dura 365 días. Junto a la inclinación, crea las estaciones.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lesson-content" id="lesson3">
+                <div class="lesson-grid">
+                    <div class="lesson-item">
+                        <img src="images/moon-rotation.jpg" alt="Rotación Lunar">
+                        <h4>Rotación Síncrona</h4>
+                        <p>La Luna tarda 27.3 días en girar sobre sí misma, lo mismo que tarda en orbitarnos. Por eso siempre vemos la misma cara.</p>
+                    </div>
+                    <div class="lesson-item">
+                        <img src="images/moon-revolution.jpg" alt="Traslación Lunar">
+                        <h4>Órbita Lunar</h4>
+                        <p>La Luna orbita la Tierra en una elipse cada 27.3 días, afectando las mareas.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lesson-content" id="lesson4">
+                <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                    <img src="images/moon-phases.jpg" alt="Fases de la Luna" style="width: 100%; border-radius: var(--border-radius-lg); margin-bottom: 30px;">
+                    <h3>Ciclo Lunar</h3>
+                    <p style="font-size: 1.1rem; color: var(--text-secondary);">
+                        Las fases (Nueva, Creciente, Llena, Menguante) dependen de la posición relativa del Sol, la Tierra y la Luna. El ciclo completo dura 29.5 días.
+                    </p>
+                </div>
             </div>
         </div>
+
+        <div class="resources-section" style="text-align: center; margin-top: 80px;">
+            <p style="font-weight: 600;">Más recursos oficiales</p>
+            <div style="display: flex; gap: 20px; justify-content: center; margin-top: 10px;">
+                <a href="https://spaceplace.nasa.gov/" style="color: var(--accent-blue); text-decoration: none;">NASA Space Place ›</a>
+                <a href="https://solarsystem.nasa.gov/" style="color: var(--accent-blue); text-decoration: none;">Solar System Exploration ›</a>
+            </div>
+        </div>
+
     </main>
     
     <footer>
         <div class="container">
-            <p>Módulo Educativo v2.0 - Lucas Pujadas // Cítrica Estudio</p>
-            <p style="opacity: 0.5;">STATUS: OPERATIONAL</p>
+            <p>Diseñado para educación interactiva. © 2025 Lucas Pujadas.</p>
         </div>
     </footer>
     
     <script src="js/app.js"></script>
 
-    </body>
+</body>
 </html>
